@@ -1,2 +1,4 @@
 slack-bolt==1.17.0
 slack-sdk==3.20.2
+SQLAlchemy
+cloud-sql-python-connector~=1.2.2
