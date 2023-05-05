@@ -27,7 +27,7 @@ def store_message(event, say):
 
         # insert to DB
         try:
-            db.insert_message(conn[1], m)
+            db.insert_message(conn, m)
             say("This message is stored successfully!")
         except Exception as e:
             say("Error: " + str(e))
@@ -36,6 +36,6 @@ def store_message(event, say):
 
 
 if __name__ == "__main__":
-    conn = db.connect()
+    conn = db.setup()
     app.start(port=int(os.environ.get("PORT", 3000)))
-    db.close(*conn)
+    db.close(conn)
