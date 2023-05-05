@@ -16,7 +16,7 @@ conn = None
 
 @app.event("reaction_added")
 def store_message(event, say):
-    if event["reaction"] != "hozon":
+    if event["reaction"] != os.environ.get("REACTION"):
         return
 
     # get reacted message
