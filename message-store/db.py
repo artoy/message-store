@@ -1,44 +1,37 @@
 import os
 
 import sqlalchemy
-from google.cloud.sql.connector import IPTypes, Connector
+from google.cloud.sql.connector import Connector
+
+connector = Connector()
 
 
-class Connection:
-    def __init__(self, gcp_conn, pool):
-        self.gcp_conn = gcp_conn
-        self.pool = pool
-
-    def close(self):
-        self.gcp_conn.close()
-
-
-def setup():
-    ip_type = IPTypes.PRIVATE if os.environ.get("PRIVATE_IP") else IPTypes.PUBLIC
-    connector = Connector(ip_type)
-
-    gcp_conn = connector.connect(
+def get_conn():
+    conn = connector.connect(
         os.environ.get("INSTANCE_CONNECTION_NAME"),
         "pymysql",
         user=os.environ.get("DB_USER"),
         password=os.environ.get("DB_PASS"),
         db=os.environ.get("DB_NAME")
     )
+    return conn
 
+
+def setup():
     pool = sqlalchemy.create_engine(
         "mysql+pymysql://",
-        creator=gcp_conn,
+        creator=get_conn
     )
 
-    return Connection(gcp_conn, pool)
+    return pool
 
 
-def close(conn):
-    conn.close()
+def close():
+    connector.close()
 
 
-def insert_message(conn, m):
-    with conn.pool.connect() as db_conn:
+def insert_message(pool, m):
+    with pool.connect() as db_conn:
         sql = sqlalchemy.text(
             "INSERT INTO messages (id, channel_id, user, text, timestamp) VALUES (:id, :channel_id, :user, :text, :timestamp)"
         )

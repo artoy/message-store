@@ -11,8 +11,6 @@ app = App(
 )
 client = app.client
 
-conn = None
-
 
 @app.event("reaction_added")
 def store_message(event, say):
@@ -20,15 +18,17 @@ def store_message(event, say):
         return
 
     # get reacted message
-    response = client.conversations_history(channel=event["item"]["channel"], latest=event["item"]["ts"], limit=1)
+    response = client.conversations_history(channel=event["item"]["channel"], inclusive=True,
+                                            latest=event["item"]["ts"],
+                                            oldest=event["item"]["ts"], limit=1)
     messages = response["messages"]
     if len(messages) > 0:
         m = message.Message(event["item"]["channel"], messages[0]["user"], messages[0]["text"], messages[0]["ts"])
 
         # insert to DB
         try:
-            db.insert_message(conn, m)
-            say("This message is stored successfully!")
+            db.insert_message(pool, m)
+            say(f"The message '{messages[0]['text']}' is stored successfully!")
         except Exception as e:
             say("Error: " + str(e))
     else:
@@ -36,6 +36,8 @@ def store_message(event, say):
 
 
 if __name__ == "__main__":
-    conn = db.setup()
-    app.start(port=int(os.environ.get("PORT", 3000)))
-    db.close(conn)
+    pool = db.setup()
+    try:
+        app.start(port=int(os.environ.get("PORT", 3000)))
+    finally:
+        db.close()
