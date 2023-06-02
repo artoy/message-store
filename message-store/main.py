@@ -39,7 +39,6 @@ def store_message(event, say):
 # response all messages
 @app.event("app_mention")
 def get_all_messages(event, say):
-    print(event["text"])
     if event["text"] != os.environ.get("MENTION"):
         return
 
