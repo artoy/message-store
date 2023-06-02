@@ -3,6 +3,8 @@ import os
 import sqlalchemy
 from google.cloud.sql.connector import Connector
 
+import message
+
 connector = Connector()
 
 
@@ -30,7 +32,7 @@ def close():
     connector.close()
 
 
-def insert_message(pool, m):
+def insert_message(pool, m) -> None:
     with pool.connect() as db_conn:
         sql = sqlalchemy.text(
             "INSERT INTO messages (id, channel_id, user, text, timestamp) VALUES (:id, :channel_id, :user, :text, :timestamp)"
@@ -43,3 +45,15 @@ def insert_message(pool, m):
             "timestamp": m.timestamp
         })
         db_conn.commit()
+
+
+def get_all_messages(pool) -> list:
+    with pool.connect() as db_conn:
+        sql = sqlalchemy.text(
+            "SELECT id, channel_id, user, text, timestamp FROM messages"
+        )
+        rows = db_conn.execute(sql)
+        messages = []
+        for row in rows:
+            messages.append(message.Message(row[1], row[2], row[3], row[4]))
+        return messages

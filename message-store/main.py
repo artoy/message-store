@@ -12,6 +12,7 @@ app = App(
 client = app.client
 
 
+# store a message
 @app.event("reaction_added")
 def store_message(event, say):
     if event["reaction"] != os.environ.get("REACTION"):
@@ -33,6 +34,24 @@ def store_message(event, say):
             say("Error: " + str(e))
     else:
         say("Error: the reacted message is not found")
+
+
+# response all messages
+@app.event("app_mention")
+def get_all_messages(event, say):
+    print(event["text"])
+    if event["text"] != os.environ.get("MENTION"):
+        return
+
+    # get all messages
+    messages = db.get_all_messages(pool)
+
+    # response all messages
+    if len(messages) > 0:
+        for m in messages:
+            say(f"Channel: {m.channel_id}, User: {m.user}, Text: {m.text}, Timestamp: {m.timestamp}")
+    else:
+        say("Error: no message is found")
 
 
 if __name__ == "__main__":
